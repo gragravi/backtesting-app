@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting Manuel</title>
+    <link rel="stylesheet" href="styles/tailwind.min.css"> 
+    <link rel="stylesheet" href="styles/main.css">
+    <script src="js/libs/lightweight-charts.standalone.js" defer></script>
+</head>
+<body class="bg-gray-900 text-white flex flex-col h-screen">
+
+    <header class="p-2 bg-gray-800 border-b border-gray-700 shadow-md flex justify-between items-center">
+        <h1 class="text-xl font-bold">Application de Backtesting</h1>
+        <div id="drawing-toolbar" class="flex items-center space-x-2">
+            <button id="draw-horizontal-line-btn" title="Dessiner une ligne horizontale (H)" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg>
+            </button>
+             <button id="undo-btn" title="Annuler (Ctrl+Z)" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.207 2.207a1 1 0 00-1.414 0l-4 4a1 1 0 000 1.414l4 4a1 1 0 001.414-1.414L7.414 8H15a1 1 0 100-2H7.414l1.793-1.793a1 1 0 000-1.414z" clip-rule="evenodd" /></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex flex-col relative overflow-hidden">
+        <div class="flex-grow flex relative">
+            <div id="chart-container" class="flex-grow h-full w-full"></div>
+            <div id="trading-panel" class="absolute top-0 right-0 h-full w-64 bg-gray-800 bg-opacity-80 backdrop-blur-sm p-4 border-l border-gray-700 overflow-y-auto">
+                <h2 class="text-lg font-bold mb-4 border-b border-gray-600 pb-2">Trading</h2>
+                <div class="space-y-4">
+                    <button id="buy-btn" class="w-full py-3 bg-green-600 hover:bg-green-700 rounded-md font-bold text-lg transition-colors">BUY</button>
+                    <button id="sell-btn" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-md font-bold text-lg transition-colors">SELL</button>
+                </div>
+                <div id="position-status" class="mt-6 p-3 bg-gray-700 rounded-md">
+                    <h3 class="text-md font-semibold mb-2">Position Actuelle</h3>
+                    <div id="status-no-position" class="text-gray-400">Aucune position ouverte</div>
+                    <div id="status-open-position" class="hidden space-y-1">
+                        <div>Type: <span id="position-type" class="font-mono"></span></div>
+                        <div>Entrée: <span id="position-entry" class="font-mono"></span></div>
+                        <div>P&L: <span id="position-pnl" class="font-mono"></span></div>
+                    </div>
+                </div>
+                <div id="stats-panel" class="mt-6 p-3 bg-gray-700 rounded-md">
+                     <h3 class="text-md font-semibold mb-2">Statistiques</h3>
+                     <div class="space-y-1 text-sm">
+                        <div>Capital: <span id="stats-capital" class="font-mono">10000.00</span></div>
+                        <div>P&L Total: <span id="stats-total-pnl" class="font-mono">0.00</span></div>
+                        <div>Trades: <span id="stats-total-trades" class="font-mono">0</span></div>
+                        <div>Taux de réussite: <span id="stats-win-rate" class="font-mono">N/A</span></div>
+                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full h-48 bg-gray-800 border-t-2 border-gray-700" id="equity-chart-container"></div>
+    </main>
+
+    <footer class="p-2 bg-gray-800 border-t border-gray-700 flex items-center justify-between space-x-4">
+        <div class="flex items-center space-x-2">
+            <button id="play-pause-btn" class="p-2 bg-blue-600 hover:bg-blue-700 rounded-md">Play</button>
+            <button id="step-forward-btn" class="p-2 bg-gray-600 hover:bg-gray-700 rounded-md">Step</button>
+        </div>
+        <div class="flex items-center space-x-2">
+            <label for="speed-select" class="text-sm">Vitesse :</label>
+            <select id="speed-select" class="bg-gray-700 text-white p-1 rounded-md">
+                <option value="1">1x</option>
+                <option value="2">2x</option>
+                <option value="5">5x</option>
+                <option value="10">10x</option>
+            </select>
+        </div>
+    </footer>
+
+    <script src="js/main.js" type="module" defer></script>
+</body>
+</html>
