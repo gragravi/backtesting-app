@@ -1,99 +1,147 @@
 <!DOCTYPE html>
-<html lang="fr" class="dark">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backtesting Manuel</title>
-    <script src="https://unpkg.com/dexie@3/dist/dexie.js" defer></script>
-    <link rel="stylesheet" href="styles/tailwind.min.css"> 
-    <link rel="stylesheet" href="styles/main.css">
-    <script src="js/libs/lightweight-charts.standalone.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading Light UI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* --- Ajout pour logo TradingView toujours visible --- */
+    #tv-logo {
+      position: absolute;
+      left: 12px;
+      /* Ajuste la valeur de bottom pour jamais être masqué par la nav */
+      bottom: 90px; /* hauteur nav (env 60px) + 30px marge */
+      z-index: 20;
+      opacity: 0.88;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      pointer-events: auto;
+      transition: bottom 0.3s;
+    }
+    @media (min-width: 700px) {
+      #tv-logo { bottom: 24px; }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white flex flex-col h-screen transition-colors duration-300">
+<body class="bg-white text-black min-h-screen flex flex-col">
 
-    <header class="p-2 bg-gray-200 dark:bg-gray-800 border-b border-gray-300 dark:border-gray-700 shadow-md flex justify-between items-center">
-        <h1 class="text-xl font-bold">Application de Backtesting</h1>
-        <div class="flex items-center space-x-2">
-            <div id="session-toolbar" class="flex items-center space-x-1 border-r border-gray-600 pr-2 mr-1">
-                <button id="save-session-btn" title="Sauvegarder la session" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-md"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg></button>
-                <button id="load-session-btn" title="Charger la dernière session" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-md"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12A8 8 0 1013.4 5.3" /></svg></button>
-            </div>
-            <div id="timeframe-toolbar" class="flex items-center space-x-1">
-                <button data-timeframe="1" class="timeframe-btn px-2 py-1 text-sm bg-blue-600 hover:bg-blue-500 rounded-md">M1</button>
-                <button data-timeframe="5" class="timeframe-btn px-2 py-1 text-sm bg-gray-700 hover:bg-gray-600 rounded-md">M5</button>
-                <button data-timeframe="15" class="timeframe-btn px-2 py-1 text-sm bg-gray-700 hover:bg-gray-600 rounded-md">M15</button>
-            </div>
-            <div id="drawing-toolbar" class="flex items-center space-x-2">
-                <button id="draw-horizontal-line-btn" title="Dessiner une ligne horizontale (H)" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" /></svg></button>
-                 <button id="undo-btn" title="Annuler (Ctrl+Z)" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.207 2.207a1 1 0 00-1.414 0l-4 4a1 1 0 000 1.414l4 4a1 1 0 001.414-1.414L7.414 8H15a1 1 0 100-2H7.414l1.793-1.793a1 1 0 000-1.414z" clip-rule="evenodd" /></svg></button>
-            </div>
-            <button id="theme-toggle-btn" class="p-2 bg-gray-700 hover:bg-gray-600 rounded-md ml-2">
-                <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-            </button>
-        </div>
-    </header>
+  <!-- Header compact, drapeaux + symbole + prix -->
+  <header class="flex items-center gap-3 px-4 pt-6 pb-2">
+    <button class="text-2xl text-gray-600" id="back-btn"><i class="fa-solid fa-arrow-left"></i></button>
+    <div class="flex flex-col">
+      <div class="flex items-center gap-1">
+        <span id="pair-flags" class="text-xl mr-1">🇪🇺🇺🇸</span>
+        <span id="symbol-name" class="font-medium text-lg tracking-tight">EURUSD</span>
+      </div>
+      <span id="symbol-price" class="text-teal-600 font-medium text-base leading-tight">1,14155</span>
+    </div>
+    <!-- BOUTON REPLAY -->
+    <button id="replay-btn" title="Rejouer le backtest" class="ml-auto bg-white border border-gray-200 shadow rounded-full w-10 h-10 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition">
+      <i class="fa-solid fa-rotate-left text-xl"></i>
+    </button>
+  </header>
 
-    <main class="flex-grow flex flex-col relative overflow-hidden">
-        <div class="flex-grow flex relative">
-            <div id="chart-container" class="flex-grow h-full w-full"></div>
-            <div id="trading-panel" class="absolute top-0 right-0 h-full w-48 sm:w-56 bg-gray-800 bg-opacity-80 backdrop-blur-sm p-4 border-l border-gray-700 overflow-y-auto z-10">
-                <h2 class="text-lg font-bold mb-4 border-b border-gray-600 pb-2">Trading</h2>
-                <div class="space-y-4">
-                    <button id="buy-btn" class="w-full py-3 bg-green-600 hover:bg-green-700 rounded-md font-bold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">BUY</button>
-                    <button id="sell-btn" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-md font-bold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">SELL</button>
-                </div>
-                <div id="position-status" class="mt-6 p-3 bg-gray-700 rounded-md">
-                    <h3 class="text-md font-semibold mb-2">Position Actuelle</h3>
-                    <div id="status-no-position" class="text-gray-400">Aucune position ouverte</div>
-                    <div id="status-open-position" class="hidden space-y-1">
-                        <div>Type: <span id="position-type" class="font-mono"></span></div>
-                        <div>Entrée: <span id="position-entry" class="font-mono"></span></div>
-                        <div>P&L: <span id="position-pnl" class="font-mono"></span></div>
-                    </div>
-                </div>
-                <div id="stats-panel" class="mt-6 p-3 bg-gray-700 rounded-md">
-                     <h3 class="text-md font-semibold mb-2">Statistiques</h3>
-                     <div class="space-y-1 text-sm">
-                        <div>Capital: <span id="stats-capital" class="font-mono">10000.00</span></div>
-                        <div>P&L Total: <span id="stats-total-pnl" class="font-mono">0.00</span></div>
-                        <div>Trades: <span id="stats-total-trades" class="font-mono">0</span></div>
-                        <div>Taux de réussite: <span id="stats-win-rate" class="font-mono">N/A</span></div>
-                     </div>
-                </div>
-                <!-- NOUVEAU: Panneau d'Export/Import -->
-                <div id="export-panel" class="mt-6">
-                    <h3 class="text-md font-semibold mb-2">Exporter / Importer</h3>
-                    <div class="space-y-2">
-                        <button id="export-trades-csv-btn" class="w-full text-sm py-2 bg-blue-800 hover:bg-blue-700 rounded-md transition-colors">Trades (CSV)</button>
-                        <button id="export-session-json-btn" class="w-full text-sm py-2 bg-gray-600 hover:bg-gray-500 rounded-md">Session (JSON)</button>
-                        <label for="import-session-json-input" class="w-full text-sm py-2 bg-gray-600 hover:bg-gray-500 rounded-md text-center block cursor-pointer">
-                            Importer Session (JSON)
-                        </label>
-                        <input type="file" id="import-session-json-input" class="hidden" accept=".json">
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="w-full h-48 bg-gray-800 border-t-2 border-gray-700" id="equity-chart-container"></div>
-    </main>
+  <!-- Chart area -->
+  <div class="relative flex-1 min-h-[340px]" style="overflow:hidden;">
+    <div id="chart-container" class="absolute inset-0 bg-white"></div>
+    <!-- Logo TradingView TOUJOURS visible au-dessus de la nav -->
+    <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noopener" id="tv-logo">
+      <img src="https://unpkg.com/lightweight-charts@4.1.0/docs/logo.svg"
+        alt="TradingView Charting Library" style="height:22px;">
+    </a>
+    <div class="absolute left-3 bottom-3 flex gap-3">
+      <button class="bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow">
+        <i class="fa-solid fa-up-right-and-down-left-from-center text-xl text-gray-600"></i>
+      </button>
+      <button class="bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow">
+        <i class="fa-regular fa-eye text-xl text-gray-600"></i>
+      </button>
+    </div>
+  </div>
 
-    <footer class="p-2 bg-gray-800 border-t border-gray-700">
-        <div class="flex items-center justify-center space-x-4">
-            <button id="play-pause-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md font-semibold transition-colors">Play</button>
-            <button id="step-forward-btn" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-md font-semibold transition-colors">Avancer →</button>
-            <div class="flex items-center space-x-2">
-                <label for="speed-select" class="text-sm">Vitesse :</label>
-                <select id="speed-select" class="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="2000">x0.5</option>
-                    <option value="1000" selected>x1</option>
-                    <option value="500">x2</option>
-                    <option value="250">x4</option>
-                </select>
-            </div>
-        </div>
-    </footer>
+  <!-- Timeframe bar -->
+  <div class="flex items-center gap-2 px-2 pt-2 pb-2 overflow-x-auto border-b border-gray-100 bg-white sticky top-0 z-20">
+    <button class="px-4 py-1 rounded-full bg-gray-100 text-base font-medium">15 min</button>
+    <button class="px-4 py-1 rounded-full bg-gray-100 text-base font-medium">1 h</button>
+    <button class="px-4 py-1 rounded-full bg-gray-100 text-base font-medium">4 h</button>
+    <button class="px-4 py-1 rounded-full bg-gray-200 border border-gray-400 text-base font-bold">1 jour</button>
+    <button class="px-2 py-1 bg-white rounded-md text-gray-600 border border-gray-200">Plus <i class="fa-solid fa-angle-down ml-1"></i></button>
+    <button class="px-2 py-1 bg-white rounded-md text-gray-600 border border-gray-200">Cap.M</button>
+  </div>
 
-    <script src="js/main.js" type="module" defer></script>
+  <!-- Bottom bar (mobile navigation style) -->
+  <nav class="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 px-2 pt-2 pb-5 flex justify-between items-center gap-1">
+    <button id="trader-btn" class="flex-1 bg-black text-white font-bold py-3 rounded-full mx-1 text-lg shadow">Trader</button>
+    <button class="flex flex-col items-center flex-1 text-gray-800">
+      <i class="fa-solid fa-pen-nib mb-1"></i>
+      <span class="text-xs">Tracés</span>
+    </button>
+    <button class="flex flex-col items-center flex-1 text-gray-800">
+      <i class="fa-solid fa-chart-simple mb-1"></i>
+      <span class="text-xs">Indicateurs</span>
+    </button>
+    <button class="flex flex-col items-center flex-1 text-gray-800" onclick="showSheet('settings-sheet')">
+      <i class="fa-regular fa-hexagon-check mb-1"></i>
+      <span class="text-xs">Paramètres</span>
+    </button>
+  </nav>
+
+  <!-- Trader bottom sheet -->
+  <!-- ... (le reste de ton code inchangé) ... -->
+
+  <script>
+    function showSheet(id) {
+      document.getElementById(id).classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+    function hideSheet(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+    }
+    function setHeader(pair, price) {
+      const flagsMap = {
+        'EURUSD': '🇪🇺🇺🇸', 'USDJPY': '🇺🇸🇯🇵', 'GBPUSD': '🇬🇧🇺🇸', 'USDCAD': '🇺🇸🇨🇦',
+        'AUDUSD': '🇦🇺🇺🇸', 'NZDUSD': '🇳🇿🇺🇸', 'USDCHF': '🇺🇸🇨🇭',
+        'BTCUSD': '₿🇺🇸', 'SOLUSDT': '🪙🇺🇸', 'ETHUSD': 'Ξ🇺🇸'
+      };
+      let flags = flagsMap[pair] || '🏳️';
+      document.getElementById('pair-flags').textContent = flags;
+      document.getElementById('symbol-name').textContent = pair;
+      document.getElementById('symbol-price').textContent = price;
+    }
+    setHeader('EURUSD', '1,14155');
+    function loadSymbol(symbol, price, change) { setHeader(symbol, price); }
+    document.getElementById('back-btn').addEventListener('click', () => { alert('Retour ou sélection de paire'); });
+    document.getElementById('trader-btn').addEventListener('click', () => { showSheet('trader-sheet'); });
+    document.getElementById('replay-btn').addEventListener('click', function() {
+      this.classList.add('animate-spin');
+      setTimeout(() => this.classList.remove('animate-spin'), 800);
+      // La vraie logique est dans js/main.js qui écoute ce bouton !
+    });
+    let lot = 0.01;
+    function updateLotDisplay() {
+      document.getElementById('lot-size').textContent = lot.toFixed(2);
+    }
+    document.getElementById('lot-increase').addEventListener('click', () => {
+      lot += 0.01;
+      lot = Math.round(lot * 100) / 100;
+      updateLotDisplay();
+    });
+    document.getElementById('lot-decrease').addEventListener('click', () => {
+      if (lot > 0.01) {
+        lot -= 0.01;
+        lot = Math.round(lot * 100) / 100;
+        updateLotDisplay();
+      }
+    });
+    updateLotDisplay();
+  </script>
 </body>
 </html>
