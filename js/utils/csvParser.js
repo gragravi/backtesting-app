@@ -1,3 +1,6 @@
+/**
+ * Charge et parse des données OHLCV depuis un fichier CSV.
+ */
 export async function parseCSV(filePath) {
     try {
         const response = await fetch(filePath);
@@ -7,16 +10,15 @@ export async function parseCSV(filePath) {
         const csvText = await response.text();
         const lines = csvText.trim().split('\n');
         
-        const header = lines[0].split(',');
         const data = lines.slice(1).map(line => {
-            const values = line.split(',');
+            const [time, open, high, low, close, volume] = line.split(',');
             return {
-                time: values[0],
-                open: parseFloat(values[1]),
-                high: parseFloat(values[2]),
-                low: parseFloat(values[3]),
-                close: parseFloat(values[4]),
-                volume: parseFloat(values[5])
+                time: time, // On garde la chaîne de caractères pour l'instant
+                open: parseFloat(open),
+                high: parseFloat(high),
+                low: parseFloat(low),
+                close: parseFloat(close),
+                volume: parseFloat(volume)
             };
         });
         
