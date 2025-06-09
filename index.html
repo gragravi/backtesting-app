@@ -8,12 +8,10 @@
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <style>
-    /* --- Ajout pour logo TradingView toujours visible --- */
     #tv-logo {
       position: absolute;
       left: 12px;
-      /* Ajuste la valeur de bottom pour jamais être masqué par la nav */
-      bottom: 90px; /* hauteur nav (env 60px) + 30px marge */
+      bottom: 90px;
       z-index: 20;
       opacity: 0.88;
       background: #fff;
@@ -42,7 +40,6 @@
       </div>
       <span id="symbol-price" class="text-teal-600 font-medium text-base leading-tight">1,14155</span>
     </div>
-    <!-- BOUTON REPLAY -->
     <button id="replay-btn" title="Rejouer le backtest" class="ml-auto bg-white border border-gray-200 shadow rounded-full w-10 h-10 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition">
       <i class="fa-solid fa-rotate-left text-xl"></i>
     </button>
@@ -51,7 +48,6 @@
   <!-- Chart area -->
   <div class="relative flex-1 min-h-[340px]" style="overflow:hidden;">
     <div id="chart-container" class="absolute inset-0 bg-white"></div>
-    <!-- Logo TradingView TOUJOURS visible au-dessus de la nav -->
     <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noopener" id="tv-logo">
       <img src="https://unpkg.com/lightweight-charts@4.1.0/docs/logo.svg"
         alt="TradingView Charting Library" style="height:22px;">
@@ -87,23 +83,122 @@
       <i class="fa-solid fa-chart-simple mb-1"></i>
       <span class="text-xs">Indicateurs</span>
     </button>
-    <button class="flex flex-col items-center flex-1 text-gray-800" onclick="showSheet('settings-sheet')">
+    <button class="flex flex-col items-center flex-1 text-gray-800" id="settings-btn">
       <i class="fa-regular fa-hexagon-check mb-1"></i>
       <span class="text-xs">Paramètres</span>
     </button>
   </nav>
 
   <!-- Trader bottom sheet -->
-  <!-- ... (le reste de ton code inchangé) ... -->
+  <div id="trader-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl pt-2 pb-6 px-4 max-h-[50vh] overflow-y-auto border border-gray-100 hidden">
+    <div class="w-12 h-1 rounded-full bg-gray-300 mx-auto mb-4"></div>
+    <div class="flex flex-col gap-3">
+      <div class="flex w-full">
+        <button id="sell-btn" class="flex-1 bg-red-400 text-white rounded-l-xl py-3 font-bold text-xl flex flex-col items-center justify-center">
+          <span class="text-xs font-medium">SELL</span>
+          <span class="text-lg font-mono">1.14156<sup>6</sup></span>
+        </button>
+        <div class="flex flex-col items-center justify-center bg-white border-y border-gray-200 px-3 select-none">
+          <div class="flex items-center">
+            <button id="lot-decrease" class="text-2xl px-1 text-gray-600 focus:outline-none" style="line-height:1">▼</button>
+            <span id="lot-size" class="px-3 text-lg font-semibold select-none">0.01</span>
+            <button id="lot-increase" class="text-2xl px-1 text-gray-600 focus:outline-none" style="line-height:1">▲</button>
+          </div>
+          <span class="text-xs text-gray-400">Lot</span>
+        </div>
+        <button id="buy-btn" class="flex-1 bg-green-500 text-white rounded-r-xl py-3 font-bold text-xl flex flex-col items-center justify-center">
+          <span class="text-xs font-medium">BUY</span>
+          <span class="text-lg font-mono">1.14165<sup>5</sup></span>
+        </button>
+      </div>
+    </div>
+    <button class="absolute top-2 right-4 text-2xl text-gray-400" onclick="hideSheet('trader-sheet')">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Bottom sheet: Paramètres -->
+  <div id="settings-sheet" class="fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl pt-2 pb-6 px-4 max-h-[80vh] overflow-y-auto border border-gray-100 hidden">
+    <div class="w-12 h-1 rounded-full bg-gray-300 mx-auto mb-4"></div>
+    <div class="grid grid-cols-2 gap-2 mb-6">
+      <button class="flex-1 flex flex-col items-center bg-gray-100 rounded-xl py-3 font-medium text-gray-900 text-base">
+        <span class="mb-1"><i class="fa-regular fa-clone"></i></span>
+        Paysage
+      </button>
+      <button class="flex-1 flex flex-col items-center bg-gray-100 rounded-xl py-3 font-medium text-gray-900 text-base">
+        <span class="mb-1"><i class="fa-regular fa-square"></i></span>
+        Paramètres
+      </button>
+    </div>
+    <div class="mb-6">
+      <h3 class="font-bold text-lg mb-2">Affichage du trading</h3>
+      <div class="grid grid-cols-2 gap-y-4 gap-x-2">
+        <label class="flex items-center gap-2 font-medium text-base">
+          <input type="checkbox" checked class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Ordres ouverts
+        </label>
+        <label class="flex items-center gap-2 font-medium text-base">
+          <input type="checkbox" checked class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Historique des ordres
+        </label>
+        <label class="flex items-center gap-2 font-medium text-base">
+          <input type="checkbox" checked class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Coût des positions
+        </label>
+        <label class="flex items-center gap-2 font-medium text-base">
+          <input type="checkbox" class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Prix d’équilibre
+        </label>
+        <label class="flex items-center gap-2 font-medium text-base col-span-2">
+          <input type="checkbox" class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Cours de ligu.
+        </label>
+      </div>
+    </div>
+    <div>
+      <h3 class="font-bold text-lg mb-2">Graphique</h3>
+      <div class="grid grid-cols-2 gap-y-4 gap-x-2">
+        <label class="flex items-center gap-2 font-medium text-base">
+          <input type="checkbox" checked class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Axe Y
+        </label>
+        <label class="flex items-center gap-2 font-medium text-base">
+          <input type="checkbox" checked class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Dernier cours
+        </label>
+        <label class="flex items-center gap-2 font-medium text-base">
+          <input type="checkbox" checked class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Compte à rebours
+        </label>
+        <label class="flex items-center gap-2 font-medium text-base">
+          <input type="checkbox" checked class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Alertes sur les cours
+        </label>
+        <label class="flex items-center gap-2 font-medium text-base col-span-2">
+          <input type="checkbox" class="form-checkbox accent-black w-5 h-5 rounded-md border-gray-400">
+          Calendrier économique
+        </label>
+      </div>
+    </div>
+    <button class="absolute top-2 right-4 text-2xl text-gray-400" onclick="hideSheet('settings-sheet')">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
 
   <script>
     function showSheet(id) {
-      document.getElementById(id).classList.remove('hidden');
-      document.body.classList.add('overflow-hidden');
+      var el = document.getElementById(id);
+      if(el) {
+        el.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+      }
     }
     function hideSheet(id) {
-      document.getElementById(id).classList.add('hidden');
-      document.body.classList.remove('overflow-hidden');
+      var el = document.getElementById(id);
+      if(el) {
+        el.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+      }
     }
     function setHeader(pair, price) {
       const flagsMap = {
@@ -120,11 +215,12 @@
     function loadSymbol(symbol, price, change) { setHeader(symbol, price); }
     document.getElementById('back-btn').addEventListener('click', () => { alert('Retour ou sélection de paire'); });
     document.getElementById('trader-btn').addEventListener('click', () => { showSheet('trader-sheet'); });
+    document.getElementById('settings-btn').addEventListener('click', () => { showSheet('settings-sheet'); });
     document.getElementById('replay-btn').addEventListener('click', function() {
       this.classList.add('animate-spin');
       setTimeout(() => this.classList.remove('animate-spin'), 800);
-      // La vraie logique est dans js/main.js qui écoute ce bouton !
     });
+    // Lot size
     let lot = 0.01;
     function updateLotDisplay() {
       document.getElementById('lot-size').textContent = lot.toFixed(2);
@@ -142,6 +238,27 @@
       }
     });
     updateLotDisplay();
+  </script>
+  <script src="js/libs/lightweight-charts.standalone.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      const chartContainer = document.getElementById('chart-container');
+      const chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: chartContainer.clientHeight,
+        layout: { background: { color: '#fff' }, textColor: '#222' },
+        grid: { vertLines: { color: '#eee' }, horzLines: { color: '#eee' } }
+      });
+      const candleSeries = chart.addCandlestickSeries({
+        upColor: '#2ebd85', downColor: '#e74c3c',
+        borderUpColor: '#2ebd85', borderDownColor: '#e74c3c',
+        wickUpColor: '#2ebd85', wickDownColor: '#e74c3c'
+      });
+      candleSeries.setData([
+        { time: '2025-06-01', open: 0.26, high: 0.28, low: 0.25, close: 0.27 },
+        { time: '2025-06-02', open: 0.27, high: 0.29, low: 0.26, close: 0.28 }
+      ]);
+    });
   </script>
 </body>
 </html>
