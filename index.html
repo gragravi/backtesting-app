@@ -1,3 +1,4 @@
+<!-- Fichier : index.html (Version Corrigée et Complète) -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -186,79 +187,24 @@
   </div>
 
   <script>
+    // Ces fonctions gèrent l'affichage des "bottom sheets"
     function showSheet(id) {
-      var el = document.getElementById(id);
-      if(el) {
-        el.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-      }
+      document.getElementById(id)?.classList.remove('hidden');
     }
     function hideSheet(id) {
-      var el = document.getElementById(id);
-      if(el) {
-        el.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-      }
+      document.getElementById(id)?.classList.add('hidden');
     }
-    function setHeader(pair, price) {
-      const flagsMap = {
-        'EURUSD': '🇪🇺🇺🇸', 'USDJPY': '🇺🇸🇯🇵', 'GBPUSD': '🇬🇧🇺🇸', 'USDCAD': '🇺🇸🇨🇦',
-        'AUDUSD': '🇦🇺🇺🇸', 'NZDUSD': '🇳🇿🇺🇸', 'USDCHF': '🇺🇸🇨🇭',
-        'BTCUSD': '₿🇺🇸', 'SOLUSDT': '🪙🇺🇸', 'ETHUSD': 'Ξ🇺🇸'
-      };
-      let flags = flagsMap[pair] || '🏳️';
-      document.getElementById('pair-flags').textContent = flags;
-      document.getElementById('symbol-name').textContent = pair;
-      document.getElementById('symbol-price').textContent = price;
-    }
-    setHeader('EURUSD', '1,14155');
-    function loadSymbol(symbol, price, change) { setHeader(symbol, price); }
-    document.getElementById('back-btn').addEventListener('click', () => { alert('Retour ou sélection de paire'); });
-    document.getElementById('trader-btn').addEventListener('click', () => { showSheet('trader-sheet'); });
-    document.getElementById('settings-btn').addEventListener('click', () => { showSheet('settings-sheet'); });
-    document.getElementById('replay-btn').addEventListener('click', function() {
-      this.classList.add('animate-spin');
-      setTimeout(() => this.classList.remove('animate-spin'), 800);
-    });
-    // Lot size
-    let lot = 0.01;
-    function updateLotDisplay() {
-      document.getElementById('lot-size').textContent = lot.toFixed(2);
-    }
-    document.getElementById('lot-increase').addEventListener('click', () => {
-      lot += 0.01;
-      lot = Math.round(lot * 100) / 100;
-      updateLotDisplay();
-    });
-    document.getElementById('lot-decrease').addEventListener('click', () => {
-      if (lot > 0.01) {
-        lot -= 0.01;
-        lot = Math.round(lot * 100) / 100;
-        updateLotDisplay();
-      }
-    });
-    updateLotDisplay();
+
+    // Lie les boutons aux fonctions
+    document.getElementById('trader-btn')?.addEventListener('click', () => showSheet('trader-sheet'));
+    document.getElementById('settings-btn')?.addEventListener('click', () => showSheet('settings-sheet'));
   </script>
+
+  <!-- Chargement de la librairie de graphique -->
   <script src="js/libs/lightweight-charts.standalone.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function(){
-      const chartContainer = document.getElementById('chart-container');
-      const chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: chartContainer.clientHeight,
-        layout: { background: { color: '#fff' }, textColor: '#222' },
-        grid: { vertLines: { color: '#eee' }, horzLines: { color: '#eee' } }
-      });
-      const candleSeries = chart.addCandlestickSeries({
-        upColor: '#2ebd85', downColor: '#e74c3c',
-        borderUpColor: '#2ebd85', borderDownColor: '#e74c3c',
-        wickUpColor: '#2ebd85', wickDownColor: '#e74c3c'
-      });
-      candleSeries.setData([
-        { time: '2025-06-01', open: 0.26, high: 0.28, low: 0.25, close: 0.27 },
-        { time: '2025-06-02', open: 0.27, high: 0.29, low: 0.26, close: 0.28 }
-      ]);
-    });
-  </script>
+
+  <!-- Chargement de notre application principale -->
+  <script type="module" src="js/main.js"></script>
+
 </body>
 </html>

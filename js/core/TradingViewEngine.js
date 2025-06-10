@@ -1,2 +1,54 @@
-import EventManager from './EventManager.js';
-export class TradingViewEngine{constructor(t,i){this.chart=null,this.candleSeries=null,this.container=document.getElementById(t),this.equityChart=null,this.equitySeries=null,this.equityContainer=document.getElementById(i),this.isDrawingMode=!1,this.drawingHistory=[],this.selectedLine=null,this.tradeLines={},this.container||console.error(`Conteneur principal introuvable: #${t}`),this.equityContainer||console.warn(`Conteneur d'équité introuvable: #${i}`)}init(){const t={layout:{background:{color:"#1f2937"},textColor:"#d1d5db"},grid:{vertLines:{color:"#374151"},horzLines:{color:"#374151"}},crosshair:{mode:LightweightCharts.CrosshairMode.Normal},rightPriceScale:{borderColor:"#4b5563"},timeScale:{borderColor:"#4b5563",timeVisible:!0,secondsVisible:!1}};this.chart=LightweightCharts.createChart(this.container,t);const i={upColor:"#22c55e",downColor:"#ef4444",borderDownColor:"#ef4444",borderUpColor:"#22c55e",wickDownColor:"#ef4444",wickUpColor:"#22c55e"};if(this.candleSeries=this.chart.addCandlestickSeries(i),this.equityContainer){const t={layout:{background:{color:"#1f2937"},textColor:"#d1d5db"},grid:{vertLines:{color:"#374151"},horzLines:{color:"#374151"}},timeScale:{visible:!1},rightPriceScale:{borderVisible:!1}};this.equityChart=LightweightCharts.createChart(this.equityContainer,t),this.equitySeries=this.equityChart.addLineSeries({color:"#2962FF",lineWidth:2})}this.chart.subscribeClick(this.handleChartClick.bind(this)),window.addEventListener("resize",this.resizeChart.bind(this)),window.addEventListener("keydown",this.handleKeyDown.bind(this)),EventManager.on("replay:data-update",t=>this.setData(t)),EventManager.on("replay:new-candle",t=>this.addCandle(t)),EventManager.on("trade:opened",t=>this.drawTradeLines(t)),EventManager.on("trade:closed",t=>{this.removeTradeLines(),this.equityContainer&&this.updateEquityCurve(t)})}updateEquityCurve(t){this.equitySeries&&this.equitySeries.update({time:t.time,value:t.newCapital})}drawTradeLines(t){this.removeTradeLines(),this.tradeLines.entry=this.candleSeries.createPriceLine({price:t.entryPrice,color:"#ffffff",lineWidth:2,lineStyle:LightweightCharts.LineStyle.Dashed,axisLabelVisible:!0,title:"Entrée"}),this.tradeLines.sl=this.candleSeries.createPriceLine({price:t.sl,color:"#ef4444",lineWidth:2,lineStyle:LightweightCharts.LineStyle.Dotted,axisLabelVisible:!0,title:"SL"}),this.tradeLines.tp=this.candleSeries.createPriceLine({price:t.tp,color:"#22c55e",lineWidth:2,lineStyle:LightweightCharts.LineStyle.Dotted,axisLabelVisible:!0,title:"TP"})}removeTradeLines(){this.tradeLines.entry&&this.candleSeries.removePriceLine(this.tradeLines.entry),this.tradeLines.sl&&this.candleSeries.removePriceLine(this.tradeLines.sl),this.tradeLines.tp&&this.candleSeries.removePriceLine(this.tradeLines.tp),this.tradeLines={}}handleChartClick(t){if(!t.point)return void this.deselectLine();if(this.isDrawingMode){const i=this.candleSeries.coordinateToPrice(t.point.y);return this.createHorizontalLine(i),this.isDrawingMode=!1,void(this.container.style.cursor="default")}const i=this.findClickedLine(t);i?this.selectLine(i):this.deselectLine()}createHorizontalLine(t){const i=this.candleSeries.createPriceLine({price:t,color:"#2962FF",lineWidth:2,lineStyle:LightweightCharts.LineStyle.Solid,axisLabelVisible:!0,title:""});this.drawingHistory.push(i)}toggleDrawingMode(){this.isDrawingMode=!this.isDrawingMode,this.container.style.cursor=this.isDrawingMode?"crosshair":"default"}undoLastDrawing(){const t=this.drawingHistory.pop();t&&this.candleSeries.removePriceLine(t)}handleKeyDown(t){t.ctrlKey&&("z"===t.key||"Z"===t.key)&&(t.preventDefault(),this.undoLastDrawing()),"Delete"===t.key&&this.selectedLine&&this.removeSelectedLine()}findClickedLine(t){const i=t.point.y;for(const n of this.drawingHistory){if(Math.abs(this.candleSeries.priceToCoordinate(n.options().price)-i)<5)return n}return null}selectLine(t){this.deselectLine(),this.selectedLine=t,t.applyOptions({color:"#FFEB3B",lineWidth:3})}deselectLine(){this.selectedLine&&this.selectedLine.applyOptions({color:"#2962FF",lineWidth:2}),this.selectedLine=null}removeSelectedLine(){if(this.selectedLine){const t=this.selectedLine;this.candleSeries.removePriceLine(t),this.drawingHistory=this.drawingHistory.filter(i=>i!==t),this.selectedLine=null}}resizeChart(){this.chart&&this.container&&this.chart.resize(this.container.clientWidth,this.container.clientHeight),this.equityChart&&this.equityContainer&&this.equityChart.resize(this.equityContainer.clientWidth,this.equityContainer.clientHeight)}setData(t){this.candleSeries&&(this.candleSeries.setData(t),this.chart.timeScale().fitContent())}addCandle(t){this.candleSeries&&this.candleSeries.update(t)}}
+// Fichier : js/core/TradingViewEngine.js (Version Complète)
+
+// On importe la fonction createChart directement de la librairie
+import { createChart } from '../libs/lightweight-charts.standalone.js';
+
+export class TradingViewEngine {
+    constructor(containerId) {
+        this.chart = null;
+        this.candleSeries = null;
+        this.container = document.getElementById(containerId);
+
+        if (!this.container) {
+            throw new Error(`[TradingViewEngine] L'élément conteneur avec l'ID "${containerId}" n'a pas été trouvé.`);
+        }
+        this.initChart();
+    }
+
+    initChart() {
+        this.chart = createChart(this.container, {
+            width: this.container.clientWidth,
+            height: this.container.clientHeight,
+            layout: { background: { color: '#ffffff' }, textColor: '#333333' },
+            grid: { vertLines: { color: '#f0f0f0' }, horzLines: { color: '#f0f0f0' } },
+            crosshair: { mode: 1 }, // Mode aimanté
+            timeScale: { timeVisible: true, secondsVisible: false },
+        });
+
+        this.candleSeries = this.chart.addCandlestickSeries({
+            upColor: '#2ebd85',
+            downColor: '#e74c3c',
+            borderVisible: false,
+            wickUpColor: '#2ebd85',
+            wickDownColor: '#e74c3c',
+        });
+
+        // Gérer le redimensionnement de la fenêtre pour que le graphique s'adapte
+        window.addEventListener('resize', () => {
+            this.chart.resize(this.container.clientWidth, this.container.clientHeight);
+        });
+    }
+
+    /**
+     * Affiche une série de données de bougies sur le graphique.
+     * @param {Array<Object>} data - Les données à afficher.
+     */
+    setData(data) {
+        if (this.candleSeries && data.length > 0) {
+            this.candleSeries.setData(data);
+            console.log(`[TradingViewEngine] ${data.length} bougies affichées sur le graphique.`);
+        } else {
+            console.error("[TradingViewEngine] Aucune donnée à afficher ou la série de bougies n'est pas initialisée.");
+        }
+    }
+}
