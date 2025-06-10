@@ -1,4 +1,3 @@
-<!-- Fichier : index.html (Version Corrigée et Complète) -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -165,24 +164,28 @@
 
   <!-- SCRIPTS QUI GERENT L'INTERFACE UTILISATEUR (INCHANGÉS) -->
   <script>
-    // Ces fonctions gèrent l'affichage des "bottom sheets"
-    function showSheet(id) {
-      document.getElementById(id)?.classList.remove('hidden');
-    }
-    function hideSheet(id) {
-      document.getElementById(id)?.classList.add('hidden');
-    }
+    function showSheet(id) { document.getElementById(id).classList.remove('hidden'); }
+    function hideSheet(id) { document.getElementById(id).classList.add('hidden'); }
+    
+    document.getElementById('back-btn').addEventListener('click', () => { alert('Retour ou sélection de paire'); });
+    document.getElementById('trader-btn').addEventListener('click', () => { showSheet('trader-sheet'); });
+    document.getElementById('settings-btn').addEventListener('click', () => { showSheet('settings-sheet'); });
+    document.getElementById('replay-btn').addEventListener('click', function() {
+      this.classList.add('animate-spin');
+      setTimeout(() => this.classList.remove('animate-spin'), 800);
+    });
 
-    // Lie les boutons aux fonctions
-    document.getElementById('trader-btn')?.addEventListener('click', () => showSheet('trader-sheet'));
-    document.getElementById('settings-btn')?.addEventListener('click', () => showSheet('settings-sheet'));
+    let lot = 0.01;
+    function updateLotDisplay() { document.getElementById('lot-size').textContent = lot.toFixed(2); }
+    document.getElementById('lot-increase').addEventListener('click', () => { lot = Math.round((lot + 0.01) * 100) / 100; updateLotDisplay(); });
+    document.getElementById('lot-decrease').addEventListener('click', () => { if (lot > 0.01) { lot = Math.round((lot - 0.01) * 100) / 100; updateLotDisplay(); } });
+    updateLotDisplay();
   </script>
 
-  <!-- Chargement de la librairie de graphique -->
+  <!-- LIBRAIRIE GRAPHIQUE -->
   <script src="js/libs/lightweight-charts.standalone.js"></script>
-
-  <!-- Chargement de notre application principale -->
+  
+  <!-- NOTRE CODE PRINCIPAL (LE CHEF D'ORCHESTRE) -->
   <script type="module" src="js/main.js"></script>
-
 </body>
 </html>

@@ -1,47 +1,52 @@
-// Fichier : js/main.js (Version FINALE et Corrigée)
+// js/main.js
 
 import { parseCSVData } from './utils/csvParser.js';
 import { TradingViewEngine } from './core/TradingViewEngine.js';
-// Les autres imports seront utilisés dans les prochaines phases
-// import { ReplayEngine } from './core/ReplayEngine.js';
-// import { TradingEngine } from './core/TradingEngine.js';
-// import EventManager from './core/EventManager.js';
+// J'ai enlevé l'import de ReplayEngine
 
-// Fonction principale asynchrone pour initialiser l'application
-async function initializeApp() {
-    console.log("🚀 Initialisation de l'application de backtesting...");
-    
-    try {
-        // --- 1. Initialisation du moteur de graphique ---
-        // Il prend l'ID du conteneur dans index.html
-        const chartEngine = new TradingViewEngine('chart-container');
+// --- CONSTANTES DE CONFIGURATION ---
+const SYMBOL = 'EURUSD';
+const DATA_PATH = 'data/EURUSD_M1_BID_2020-2025.csv';
+const CHART_CONTAINER_ID = 'chart-container';
 
-        // --- 2. Chargement des données historiques ---
-        // ON UTILISE LE BON NOM DE FICHIER CORRIGÉ ICI
-        const historicalData = await parseCSVData('data/EURUSD_M1_BID_2020-2025.csv');
-        
-        if (!historicalData || historicalData.length === 0) {
-            throw new Error("Le chargement des données a échoué. Vérifiez le chemin du fichier et le contenu.");
-        }
-        
-        // --- 3. Affichage des données sur le graphique ---
-        // On passe toutes les données chargées au moteur de graphique
-        chartEngine.setData(historicalData);
-        
-        console.log("✅ Application initialisée avec succès ! Le graphique est prêt.");
-
-        // La logique pour le ReplayEngine, TradingEngine, etc. sera ajoutée ici dans les prochaines étapes.
-
-    } catch (error) {
-        console.error("❌ Erreur critique lors de l'initialisation :", error);
-        // On pourrait afficher un message d'erreur à l'utilisateur ici
-        document.body.innerHTML = `<div style="padding: 20px; text-align: center; color: red;">
-            <h1>Erreur de chargement</h1>
-            <p>${error.message}</p>
-            <p>Veuillez vérifier la console (F12) pour plus de détails.</p>
-        </div>`;
+function updateHeader(symbol, price) {
+    const flagsMap = { 'EURUSD': '🇪🇺🇺🇸', 'USDJPY': '🇺🇸🇯🇵', 'GBPUSD': '🇬🇧🇺🇸', 'BTCUSD': '₿🇺🇸' };
+    document.getElementById('pair-flags').textContent = flagsMap[symbol] || '🏳️';
+    document.getElementById('symbol-name').textContent = symbol;
+    if (price) {
+        document.getElementById('symbol-price').textContent = price.toFixed(5);
+    } else {
+        document.getElementById('symbol-price').textContent = '---';
     }
 }
 
-// On attend que le DOM soit complètement chargé pour lancer notre application
+async function initializeApp() {
+    console.log("🚀 Initialisation de l'application (version stable)...");
+    
+    TradingViewEngine.initChart(CHART_CONTAINER_ID);
+    
+    console.log(`⏳ Chargement des données pour ${SYMBOL} depuis ${DATA_PATH}...`);
+    const historicalData = await parseCSVData(DATA_PATH);
+
+    if (historicalData && historicalData.length > 0) {
+        console.log('⏳ Tri des données chronologiques...');
+        historicalData.sort((a, b) => a.time - b.time);
+
+        TradingViewEngine.setSeriesData(historicalData);
+        // J'ai enlevé l'appel à ReplayEngine.setHistoricalData(historicalData);
+
+        const lastPrice = TradingViewEngine.getLatestPrice();
+        updateHeader(SYMBOL, lastPrice);
+    } else {
+        console.error(`❌ Aucune donnée n'a été chargée depuis ${DATA_PATH}.`);
+        updateHeader(SYMBOL, null);
+    }
+
+    // Le bouton Replay ne fera rien pour l'instant, c'est normal.
+    document.getElementById('replay-btn').onclick = (e) => {
+        e.preventDefault();
+        console.log('Bouton Replay cliqué (fonctionnalité désactivée temporairement).');
+    };
+}
+
 document.addEventListener('DOMContentLoaded', initializeApp);
