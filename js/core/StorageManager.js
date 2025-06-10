@@ -1,56 +1,52 @@
 // js/core/StorageManager.js
 
-export class StorageManager {
-    constructor() {
-        this.db = new Dexie('BacktestingAppDB');
-        this.db.version(1).stores({
-            sessions: 'id,timestamp', // 'id' est la clé primaire, 'timestamp' est un index
-        });
-    }
+import { parseCSV } from '../utils/csvParser.js';
 
-    // --- Préférences simples (LocalStorage) ---
+export const StorageManager = (function() {
+    let historicalData = [];
 
-    savePreference(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
-    }
-
-    loadPreference(key, defaultValue = null) {
-        const value = localStorage.getItem(key);
-        return value ? JSON.parse(value) : defaultValue;
-    }
-
-    // --- Session de backtesting (IndexedDB via Dexie) ---
-
-    async saveSession(sessionData) {
+    // Fonction pour charger un fichier CSV et parser les données historiques
+    async function loadCSVData(filePath) {
+        // On va charger le fichier CSV depuis le dossier 'data'
         try {
-            // On sauvegarde la session avec un ID fixe (1) pour toujours écraser la dernière.
-            // On pourrait faire un système plus complexe avec plusieurs sessions sauvegardées.
-            const sessionToSave = {
-                id: 1,
-                timestamp: new Date(),
-                data: sessionData,
-            };
-            await this.db.sessions.put(sessionToSave);
-            console.log("Session sauvegardée avec succès !");
-            return true;
-        } catch (error) {
-            console.error("Erreur lors de la sauvegarde de la session:", error);
-            return false;
+            const response = await fetch(filePath);
+            if (!response.ok) throw new Error('Fichier non trouvé: ' + filePath);
+            const csvText = await response.text();
+
+            // Utilise le parser CSV existant (dans js/utils/csvParser.js)
+            const parsed = parseCSV(csvText);
+
+            // On suppose que le CSV a les colonnes: time, open, high, low, close, volume
+            // On formate pour Lightweight Charts (time doit être un timestamp/secondes UNIX)
+            historicalData = parsed.map(row => ({
+                time: parseInt(row.time), // Ex: 1622505600
+                open: parseFloat(row.open),
+                high: parseFloat(row.high),
+                low: parseFloat(row.low),
+                close: parseFloat(row.close),
+                volume: row.volume ? parseFloat(row.volume) : undefined
+            })).filter(row => !isNaN(row.time) && !isNaN(row.open));
+
+            return historicalData;
+        } catch (err) {
+            console.error('Erreur lors du chargement du CSV:', err);
+            return [];
         }
     }
 
-    async loadLastSession() {
-        try {
-            const session = await this.db.sessions.get(1);
-            if (session) {
-                console.log("Dernière session chargée.");
-                return session.data;
-            }
-            console.log("Aucune session sauvegardée trouvée.");
-            return null;
-        } catch (error) {
-            console.error("Erreur lors du chargement de la session:", error);
-            return null;
-        }
+    // Fonction pour obtenir les données déjà chargées
+    function getHistoricalData() {
+        return historicalData;
     }
-}
+
+    // (Pour extension) Fonction pour nettoyer ou remplacer les données
+    function clearData() {
+        historicalData = [];
+    }
+
+    return {
+        loadCSVData,
+        getHistoricalData,
+        clearData
+    };
+})();
