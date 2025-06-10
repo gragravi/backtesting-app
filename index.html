@@ -8,52 +8,28 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="styles/main.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <style>
-    #tv-logo {
-      position: absolute;
-      left: 12px;
-      bottom: 90px;
-      z-index: 20;
-      opacity: 0.88;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.04);
-      padding: 4px 6px;
-      display: flex;
-      align-items: center;
-      pointer-events: auto;
-      transition: bottom 0.3s;
-    }
-    @media (min-width: 700px) {
-      #tv-logo { bottom: 24px; }
-    }
-  </style>
 </head>
 <body class="bg-white text-black min-h-screen flex flex-col">
 
-  <!-- Header compact, drapeaux + symbole + prix -->
+  <!-- Header : sera rempli par JavaScript -->
   <header class="flex items-center gap-3 px-4 pt-6 pb-2">
     <button class="text-2xl text-gray-600" id="back-btn"><i class="fa-solid fa-arrow-left"></i></button>
     <div class="flex flex-col">
       <div class="flex items-center gap-1">
-        <span id="pair-flags" class="text-xl mr-1">🇪🇺🇺🇸</span>
-        <span id="symbol-name" class="font-medium text-lg tracking-tight">EURUSD</span>
+        <span id="pair-flags" class="text-xl mr-1"></span>
+        <span id="symbol-name" class="font-medium text-lg tracking-tight">--</span>
       </div>
-      <span id="symbol-price" class="text-teal-600 font-medium text-base leading-tight">1,14155</span>
+      <span id="symbol-price" class="text-teal-600 font-medium text-base leading-tight">-.-----</span>
     </div>
     <button id="replay-btn" title="Rejouer le backtest" class="ml-auto bg-white border border-gray-200 shadow rounded-full w-10 h-10 flex items-center justify-center text-blue-600 hover:bg-blue-50 transition">
       <i class="fa-solid fa-rotate-left text-xl"></i>
     </button>
   </header>
 
-  <!-- Chart area -->
+  <!-- Chart area : le conteneur est ici -->
   <div class="relative flex-1 min-h-[340px]" style="overflow:hidden;">
     <div id="chart-container" class="absolute inset-0 bg-white"></div>
-    <div id="chart" style="width: 100%; height: 400px;"></div>
-    <a href="https://www.tradingview.com/lightweight-charts/" target="_blank" rel="noopener" id="tv-logo">
-      <img src="https://unpkg.com/lightweight-charts@4.1.0/docs/logo.svg"
-        alt="TradingView Charting Library" style="height:22px;">
-    </a>
+    <!-- Le div "chart" n'est plus nécessaire, chart-container suffit -->
     <div class="absolute left-3 bottom-3 flex gap-3">
       <button class="bg-white border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow">
         <i class="fa-solid fa-up-right-and-down-left-from-center text-xl text-gray-600"></i>
@@ -187,6 +163,7 @@
     </button>
   </div>
 
+  <!-- SCRIPTS QUI GERENT L'INTERFACE UTILISATEUR (INCHANGÉS) -->
   <script>
     // Ces fonctions gèrent l'affichage des "bottom sheets"
     function showSheet(id) {
