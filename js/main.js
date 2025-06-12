@@ -2,17 +2,22 @@
 
 import { parseCSVData } from './utils/csvParser.js';
 import { TradingViewEngine } from './core/TradingViewEngine.js';
-// J'ai enlevé l'import de ReplayEngine
+import { ReplayEngine } from './core/ReplayEngine.js';
 
-// --- CONSTANTES DE CONFIGURATION ---
 const SYMBOL = 'EURUSD';
 const DATA_PATH = 'data/EURUSD_M1_BID_2020-2025.csv';
 const CHART_CONTAINER_ID = 'chart-container';
 
+// --- FONCTION DE MISE À JOUR DE L'EN-TÊTE RESTAURÉE ---
 function updateHeader(symbol, price) {
-    const flagsMap = { 'EURUSD': '🇪🇺🇺🇸', 'USDJPY': '🇺🇸🇯🇵', 'GBPUSD': '🇬🇧🇺🇸', 'BTCUSD': '₿🇺🇸' };
+    const flagsMap = {
+        'EURUSD': '🇪🇺🇺🇸', 'USDJPY': '🇺🇸🇯🇵', 'GBPUSD': '🇬🇧🇺🇸',
+        'BTCUSD': '₿🇺🇸'
+    };
+
     document.getElementById('pair-flags').textContent = flagsMap[symbol] || '🏳️';
     document.getElementById('symbol-name').textContent = symbol;
+    
     if (price) {
         document.getElementById('symbol-price').textContent = price.toFixed(5);
     } else {
@@ -20,33 +25,49 @@ function updateHeader(symbol, price) {
     }
 }
 
+function setupReplayUI(allData) {
+    const replayBtn = document.getElementById('replay-btn');
+    const replayModal = document.getElementById('replay-modal');
+    const cancelReplayBtn = document.getElementById('cancel-replay-btn');
+    const startReplayBtn = document.getElementById('start-replay-btn');
+
+    replayBtn.addEventListener('click', () => {
+        replayModal.classList.remove('hidden');
+    });
+
+    cancelReplayBtn.addEventListener('click', () => {
+        replayModal.classList.add('hidden');
+    });
+
+    startReplayBtn.addEventListener('click', () => {
+        const balance = document.getElementById('initial-balance').value;
+        const date = document.getElementById('start-date').value;
+        
+        console.log(`Démarrage du replay avec Capital: ${balance}, Date: ${date}`);
+        
+        replayModal.classList.add('hidden');
+    });
+}
+
 async function initializeApp() {
-    console.log("🚀 Initialisation de l'application (version stable)...");
+    console.log("🚀 Initialisation de l'application...");
     
     TradingViewEngine.initChart(CHART_CONTAINER_ID);
     
-    console.log(`⏳ Chargement des données pour ${SYMBOL} depuis ${DATA_PATH}...`);
     const historicalData = await parseCSVData(DATA_PATH);
 
     if (historicalData && historicalData.length > 0) {
-        console.log('⏳ Tri des données chronologiques...');
-        historicalData.sort((a, b) => a.time - b.time);
-
         TradingViewEngine.setSeriesData(historicalData);
-        // J'ai enlevé l'appel à ReplayEngine.setHistoricalData(historicalData);
+        // ReplayEngine.setHistoricalData(historicalData); // On garde ça pour plus tard
 
-        const lastPrice = TradingViewEngine.getLatestPrice();
-        updateHeader(SYMBOL, lastPrice);
+        // On met à jour l'en-tête après avoir injecté les données
+        updateHeader(SYMBOL, TradingViewEngine.getLatestPrice());
+
+        setupReplayUI(historicalData);
     } else {
-        console.error(`❌ Aucune donnée n'a été chargée depuis ${DATA_PATH}.`);
+        console.error(`❌ Aucune donnée chargée.`);
         updateHeader(SYMBOL, null);
     }
-
-    // Le bouton Replay ne fera rien pour l'instant, c'est normal.
-    document.getElementById('replay-btn').onclick = (e) => {
-        e.preventDefault();
-        console.log('Bouton Replay cliqué (fonctionnalité désactivée temporairement).');
-    };
 }
 
 document.addEventListener('DOMContentLoaded', initializeApp);
