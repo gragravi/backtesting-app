@@ -1,1 +1,0 @@
-html,body{height:100%;margin:0;padding:0}button:disabled{opacity:.5;cursor:not-allowed}input[type=checkbox].accent-black:checked{background-color:#000!important;border-color:#000!important}input[type=checkbox].peer:checked~div.peer-checked\:bg-green-400{background-color:#4ade80!important}input[type=checkbox].peer:checked~div.peer-checked\:translate-x-4{transform:translate(1rem)}
