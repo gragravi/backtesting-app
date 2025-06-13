@@ -1,19 +1,64 @@
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-input[type="checkbox"].accent-black:checked {
-  background-color: #000 !important;
-  border-color: #000 !important;
-}
-input[type="checkbox"].peer:checked ~ div.peer-checked\:bg-green-400 {
-  background-color: #4ade80 !important;
-}
-input[type="checkbox"].peer:checked ~ div.peer-checked\:translate-x-4 {
-  transform: translateX(1rem);
+// js/utils/csvParser.js
+// ========================================================================
+// VERSION SÉCURISÉE - NE PEUT PLUS RETOURNER 'undefined'
+// ========================================================================
+
+export async function parseCSVData(filePath) {
+    try {
+        const response = await fetch(filePath);
+        
+        // GESTION D'ERREUR AMÉLIORÉE
+        if (!response.ok) {
+            // Si le fichier n'est pas trouvé (erreur 404) ou autre erreur serveur
+            throw new Error(`Erreur HTTP lors du chargement du CSV: ${response.status} ${response.statusText}`);
+        }
+        
+        const csvText = await response.text();
+        if (!csvText || csvText.trim() === '') {
+            console.warn("Le fichier CSV est vide ou ne contient que des espaces.");
+            return []; // Retourne un tableau vide si le fichier est vide
+        }
+
+        const lines = csvText.trim().split('\n');
+        
+        lines.shift(); // Enlève l'en-tête
+
+        const data = lines
+            .map(row => {
+                if (!row.trim()) return null;
+
+                const [dateTime, open, high, low, close] = row.split(',');
+                if (!dateTime || !open || !high || !low || !close) return null;
+
+                const [datePart, timePart] = dateTime.split(' ');
+                if (!datePart || !timePart) return null;
+
+                const [day, month, year] = datePart.split('.');
+                const [hours, minutes] = timePart.split(':');
+                if (!year || !month || !day || !hours || !minutes) return null;
+
+                const isoDate = `${year}-${month}-${day}T${hours}:${minutes}:00Z`;
+                const dateObject = new Date(isoDate);
+
+                const timestamp = Math.floor(dateObject.getTime() / 1000);
+                if (isNaN(timestamp)) return null;
+
+                return {
+                    time: timestamp,
+                    open: parseFloat(open),
+                    high: parseFloat(high),
+                    low: parseFloat(low),
+                    close: parseFloat(close),
+                };
+            })
+            .filter(candle => candle !== null && !isNaN(candle.open) && !isNaN(candle.close));
+
+        console.log(`✅ Fichier CSV parsé : ${data.length} bougies valides chargées.`);
+        return data.sort((a, b) => a.time - b.time);
+
+    } catch (error) {
+        console.error("❌ Erreur critique lors du parsing du fichier CSV:", error);
+        // SÉCURITÉ : Quoi qu'il arrive, on retourne un tableau vide pour éviter le crash.
+        return []; 
+    }
 }

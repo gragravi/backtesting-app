@@ -37,6 +37,14 @@
         <button class="px-2 py-1 bg-white rounded-md text-gray-600 border border-gray-200">Plus <i class="fa-solid fa-angle-down ml-1"></i></button>
     </div>
 
+    <div id="replay-controls" class="fixed bottom-16 inset-x-0 z-40 bg-white/70 backdrop-blur-sm p-2 flex justify-center items-center gap-4 shadow-lg hidden">
+        <button id="replay-speed-btn" class="text-sm font-bold text-blue-600">1x</button>
+        <button id="replay-back-btn" class="text-xl text-gray-700 p-2 rounded-full hover:bg-gray-200"><i class="fa-solid fa-backward-step"></i></button>
+        <button id="replay-play-pause-btn" class="text-3xl text-blue-600 bg-blue-100 w-14 h-14 flex items-center justify-center rounded-full shadow"><i class="fa-solid fa-play"></i></button>
+        <button id="replay-forward-btn" class="text-xl text-gray-700 p-2 rounded-full hover:bg-gray-200"><i class="fa-solid fa-forward-step"></i></button>
+        <button id="replay-stop-btn" class="text-red-500 font-bold"><i class="fa-solid fa-stop"></i> Stop</button>
+    </div>
+
     <nav class="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 px-2 pt-2 pb-5 flex justify-between items-center gap-1">
         <button id="trader-btn" class="flex-1 bg-black text-white font-bold py-3 rounded-full mx-1 text-lg shadow">Trader</button>
         <button class="flex flex-col items-center flex-1 text-gray-800"><i class="fa-solid fa-pen-nib mb-1"></i><span class="text-xs">Tracés</span></button>
@@ -44,7 +52,6 @@
         <button class="flex flex-col items-center flex-1 text-gray-800" id="settings-btn"><i class="fa-regular fa-hexagon-check mb-1"></i><span class="text-xs">Paramètres</span></button>
     </nav>
     
-    <!-- === MODAL DE REPLAY AVEC SON CONTENU COMPLET === -->
     <div id="replay-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay hidden">
         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm">
             <h3 class="text-xl font-bold mb-4 text-gray-800">Démarrer le Replay</h3>

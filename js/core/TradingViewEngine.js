@@ -1,39 +1,34 @@
 // js/core/TradingViewEngine.js
 
-import { VerticalLine } from './VerticalLine.js';
-
 let chart = null;
 let candleSeries = null;
 let lastData = null;
-let replayLinePrimitive = null;
 
 export const TradingViewEngine = {
     initChart(containerId) {
         const chartContainer = document.getElementById(containerId);
         chart = LightweightCharts.createChart(chartContainer, {
-            width: chartContainer.clientWidth, height: chartContainer.clientHeight,
             layout: { background: { color: '#ffffff' }, textColor: '#222222' },
             grid: { vertLines: { color: '#eeeeee' }, horzLines: { color: '#eeeeee' } },
-            timeScale: { timeVisible: true, secondsVisible: false },
-            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+            timeScale: { timeVisible: true, secondsVisible: false, borderColor: '#2B2B43' },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal }
         });
 
         candleSeries = chart.addCandlestickSeries({
             upColor: '#2ebd85', downColor: '#e74c3c',
             borderUpColor: '#2ebd85', borderDownColor: '#e74c3c',
             wickUpColor: '#2ebd85', wickDownColor: '#e74c3c',
-            priceFormat: { type: 'price', precision: 5, minMove: 0.00001 },
+            priceFormat: { type: 'price', precision: 5, minMove: 0.00001 }
         });
 
-        replayLinePrimitive = new VerticalLine(chart, candleSeries, { visible: false });
-        candleSeries.attachPrimitive(replayLinePrimitive);
-
+        const resizeObserver = new ResizeObserver(entries => {
+            const chartElement = entries.find(entry => entry.target === chartContainer);
+            if (!chartElement) { return; }
+            const { width, height } = chartElement.contentRect;
+            chart.applyOptions({ width, height });
+        });
+        resizeObserver.observe(chartContainer);
         console.log('✅ Moteur TradingView initialisé.');
-        new ResizeObserver(entries => {
-            if (entries.length > 0 && entries[0].contentRect.width > 0) {
-                chart.resize(entries[0].contentRect.width, entries[0].contentRect.height);
-            }
-        }).observe(chartContainer);
     },
 
     setSeriesData(data) {
@@ -41,7 +36,19 @@ export const TradingViewEngine = {
         candleSeries.setData(data);
         lastData = data;
         chart.timeScale().fitContent();
-        console.log("✅ Données injectées dans le graphique.");
+        console.log("✅ Données initiales injectées dans le graphique.");
+    },
+
+    updateSeriesData(newData) {
+        if (!candleSeries) return;
+        candleSeries.setData(newData);
+        lastData = newData;
+        console.log(`📈 Graphique mis à jour avec ${newData.length} bougies.`);
+    },
+    
+    updateCandle(candle) {
+        if (!candleSeries) return;
+        candleSeries.update(candle);
     },
 
     getLatestPrice() {
@@ -49,28 +56,5 @@ export const TradingViewEngine = {
             return lastData[lastData.length - 1].close;
         }
         return null;
-    },
-
-    activateReplaySelection(onPointSelectedCallback) {
-        if (!replayLinePrimitive) return;
-        replayLinePrimitive.update({ visible: true });
-
-        const crosshairMoveSubscription = (param) => {
-            if (!param.time || !param.point) {
-                replayLinePrimitive.update({ visible: false });
-                return;
-            }
-            replayLinePrimitive.update({ visible: true, time: param.time });
-        };
-
-        const clickSubscription = (param) => {
-            if (!param.time) return;
-            chart.unsubscribeCrosshairMove(crosshairMoveSubscription);
-            chart.unsubscribeClick(clickSubscription);
-            replayLinePrimitive.update({ visible: false });
-            onPointSelectedCallback(param.time);
-        };
-        chart.subscribeCrosshairMove(crosshairMoveSubscription);
-        chart.subscribeClick(clickSubscription);
     }
 };
